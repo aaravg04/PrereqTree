@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<head>
+    <style type='text/css'>
+        /* thx https://stackoverflow.com/questions/16550717/how-to-add-a-background-text-to-textarea-tags */
+        .wallpapered {
+          width: 300px;
+          height: 75px;
+          position: relative;
+          /* outline: 1px dashed blue; */
+        }
+        
+        .wallpapered textarea {
+          width: inherit;
+          height: inherit;
+        }
+        
+        .wallpapered .background {
+          position: absolute;
+          top: 0;
+          left: 0;
+          color: gray;
+          font-family: 'Gill Sans', 'Gill Sans MT', 'Calibri', 'Trebuchet MS', sans-serif;
+          font-size: medium;
+          /* user-select: none; */
+        }
+
+        textarea {
+            font-family: 'Gill Sans', 'Gill Sans MT', 'Calibri', 'Trebuchet MS', sans-serif;
+            font-size: medium;
+        }
+
+        p {
+            font-family: 'Gill Sans', 'Gill Sans MT', 'Calibri', 'Trebuchet MS', sans-serif
+        }
+
+    </style>
+    <script src="script.js"></script>
+</head>
+
+<body>
+    <p>Enter course code here (e.g. CS 1331, MATH 1553, etc.)</p>
+    <div class="wallpapered">
+    <textarea id="course"></textarea>
+    </div>
+    <br>
+    <button onclick="buildTree();">Submit</button>
+</body>
