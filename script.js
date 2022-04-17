@@ -97,3 +97,44 @@ class node {
     }
 
 }
+
+/*
+sample visualization code from AnyChart https://docs.anychart.com/Basic_Charts/Word_Tree 
+once the full data tree is created, can transfer to this structure and visualize
+probably more efficient way to do it but eh its fiiiiiiiiiine
+
+---
+// create data
+var data = [
+  {value:     "Slavic Languages",
+   children: [
+    {value:   "East", children: [
+      {value: "Russian"},
+      {value: "Ukrainian"},
+      {value: "Belarusian"}
+    ]},
+    {value:   "West", children: [
+      {value: "Polish"},
+      {value: "Czech"},
+      {value: "Slovak"}
+    ]},
+    {value:   "South", children: [
+      {value: "Bulgarian"},
+      {value: "Serbian"},
+      {value: "Croatian"},
+      {value: "Slovene"},
+      {value: "Macedonian"}
+    ]}  
+  ]} 
+];
+
+// create a chart and set the data
+var chart = anychart.wordtree(data, "as-tree");
+
+// set the container id
+chart.container("visCont");
+
+// initiate drawing the chart
+chart.draw();
+---
+*/
