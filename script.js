@@ -16,6 +16,9 @@ function checkTArea() {
 }
 
 function buildTree() {
+
+    document.getElementById("visCont").innerHTML = "";
+
     var course = document.getElementById("course").value;
     // assuming that the course was entered in correct format (uppercase tag MATH/CS/ACCT/HUM/etc..) because i don't want to deal with an autocomplete rn
     // i can barely do js and webdev, much less an actual autocompleter (efficiently at least)
@@ -27,12 +30,95 @@ function buildTree() {
         return;
     }
 
-    var root = new node(course, courses[course][2]);
+    // var root = new node(course, courses[course][2]);
     // console.log(root);
     // root = recursiveTree(root);
-    recursiveTree(root);
-    console.log(root);
+    // recursiveTree(root);
+    // console.log(root);
+
+    var data = {
+        value: course,
+        children: courses[course][2]
+    };
+    console.log(data);
+    buildData(data);
+
+    var finDat = [data];
+
+    console.log(data, finDat);
+
+    // create a chart and set the data
+    var chart = anychart.wordtree(finDat, "as-tree");
+
+    // set the container id
+    chart.container("visCont");
+
+    // initiate drawing the chart
+    chart.draw();
+
 }
+
+function buildData(data) {
+
+    var tchildren = [];
+
+    if (data.children.length > 0) {
+
+        if(data.children[0] == 'and' || data.children[0] == 'or') {
+            // console.log(cell.children);
+            tchildren.push({
+                value: data.children[0],
+                children: data.children.slice(1)
+            });
+        } else {
+            // means its a list of direct courses of format {id: "course id", grade: "min grade"}
+            data.children.forEach(function(childCourse) {
+
+                if(childCourse.id.includes("X")) {
+                    // assuming that it direclty means its one of the wacky transfer thingies
+                    tchildren.push({
+                        value: childCourse.id,
+                        children: []
+                    });
+                } else {
+                    // normal course
+                    if(childCourse.id in courses) {
+                        tchildren.push({
+                            value: childCourse.id,
+                            children: courses[childCourse.id][2]
+                        });
+                    } else {
+                        tchildren.push({
+                            value: childCourse.id + " (UNAVAILABLE PREREQS)",
+                            children: []
+                        });
+                    }
+                }
+
+            });
+            // cell.nodechildren.push(new node(course.id, []));
+        }
+        console.log(data, tchildren);
+        tchildren.forEach(childCell => buildData(childCell));
+    }
+    data.children = tchildren;
+
+}
+
+/*
+    Need tree of nodes, root node is the course selection
+    each child is direct prerequisites, how designate which are interchangable?
+    for each child, repeat process and give them children with their direct prerequisites
+    then for each of those, repeat until no prerequisites for a node
+
+    IDEA
+    IT BRANCHES DOWN TO A BIG OR AND THEN THE OTHER CLASSES
+    so if a class has a prereq of "this or this or this" and "that and that and that", it can do:
+                    class
+                  /      \
+                AND       OR 
+              / | \      / | \          
+*/
 
 function recursiveTree(cell) {
 
@@ -69,22 +155,7 @@ function recursiveTree(cell) {
 
 }
 
-/*
 
-    Need tree of nodes, root node is the course selection
-    each child is direct prerequisites, how designate which are interchangable?
-    for each child, repeat process and give them children with their direct prerequisites
-    then for each of those, repeat until no prerequisites for a node
-
-    IDEA
-    IT BRANCHES DOWN TO A BIG OR AND THEN THE OTHER CLASSES
-    so if a class has a prereq of "this or this or this" and "that and that and that", it can do:
-                    class
-                  /      \
-                AND       OR 
-              / | \      / | \
-            
-*/
 
 class node {
 
