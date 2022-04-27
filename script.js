@@ -27,7 +27,7 @@ function checkTArea() {
 }
 
 function visualToggle() {
-    // toggle from light to dark mode or vice versa
+    // toggle from light to dark mode or other way around
 
     if(mode) {
         chart.background().fill("#000000");
