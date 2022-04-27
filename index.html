@@ -40,11 +40,16 @@
 </head>
 
 <body>
-    <p>Enter course code here (e.g. CS 1331, MATH 1553, etc.)</p>
-    <div class="wallpapered">
-    <textarea id="course"></textarea>
-    </div>
+    <p>Enter course code (e.g. CS 1331, MATH 1553, etc.) here and click the submit button to see full prerequisite tree <br>
+        To isolate a specific "branch" of the tree, click on the item whose tree you wish to isolate <br>
+        And to return to the original state, click on the original item (the course at the far left with the code you entered)
+    </p>
+
+    <textarea id="course" rows="1" cols="50"></textarea>
     <br>
+    <br>
+    
     <button onclick="buildTree();">Submit</button>
     <div id="visCont"></div>
+
 </body>

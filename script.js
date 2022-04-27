@@ -12,6 +12,7 @@ const ref  = {
                 "or": "all of: "
             };
 
+// useless
 function checkTArea() {
     if(document.getElementById("course").value != '') {
         document.getElementById("bkgdtxt").style.visibility = "hidden";
@@ -41,16 +42,20 @@ function buildTree() {
     // recursiveTree(root);
     // console.log(root);
 
+
+    // NOTE: FIGURE OUT HOW TO ADD DESCRIPTIONS SO HOVERING OVER ITEM GIVES STUFF LIKE COURSE DESCR, CREDIT HOURS, ETC.
+    // OR IS IT REALLY NECESSARY? IDK
     var data = {
         value: course,
         children: courses[course][2]
     };
-    console.log(data);
+
+    // console.log(data);
     buildData(data);
 
     var finDat = [data];
 
-    console.log(data, finDat);
+    // console.log(data, finDat);
 
     // create a chart and set the data
     var chart = anychart.wordtree(finDat, "as-tree");
@@ -95,7 +100,8 @@ function buildData(data) {
             // means its a list of direct courses of format {id: "course id", grade: "min grade"}
             data.children.forEach(function(childCourse) {
                 // console.log(childCourse);
-
+                
+                // can replace hasOwnProperty w/ isArray(childCourse), checks if array
                 if(childCourse.hasOwnProperty("id")) {
                     // means that it's a dictionary object thingy
                     
@@ -134,7 +140,7 @@ function buildData(data) {
             });
             // cell.nodechildren.push(new node(course.id, []));
         }
-        console.log(data, tchildren);
+        // console.log(data, tchildren);
         tchildren.forEach(childCell => buildData(childCell));
     }
     data.children = tchildren;
@@ -156,6 +162,7 @@ function buildData(data) {
               / | \      / | \          
 */
 
+// redundant 
 function recursiveTree(cell) {
 
     // DON'T CHECK COURSES WITH "X" IN IT FOR CHILDREN (MATH 1X55, ETC.)
