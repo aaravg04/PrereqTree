@@ -7,6 +7,11 @@ fetch("https://gt-scheduler.github.io/crawler/202208.json")
     .then(response => {return response.json();})
     .then((obj) => {courses = obj.courses});
 
+const ref  = { 
+                "and": "any of: ",
+                "or": "all of: "
+            };
+
 function checkTArea() {
     if(document.getElementById("course").value != '') {
         document.getElementById("bkgdtxt").style.visibility = "hidden";
@@ -58,6 +63,22 @@ function buildTree() {
 
 }
 
+/*
+FOUND THE ERROR CASE
+Program doesn't account for the possibility that one of the children is an and list
+
+(from Math 3670 tree)
+children: Array(5)
+0: {id: 'MATH 1502', grade: 'D'}
+1: {id: 'MATH 1512', grade: 'D'}
+2: {id: 'MATH 1504', grade: 'D'}
+3: {id: 'MATH 1555', grade: 'D'}
+4: (3) ['and', Array(4), Array(7)]
+
+Breaks on output 4 because doesn't realize that it's an "and" tree and treats it like a normal class dict
+
+*/
+
 function buildData(data) {
 
     var tchildren = [];
@@ -67,33 +88,48 @@ function buildData(data) {
         if(data.children[0] == 'and' || data.children[0] == 'or') {
             // console.log(cell.children);
             tchildren.push({
-                value: data.children[0],
+                value: ref[data.children[0]],
                 children: data.children.slice(1)
             });
         } else {
             // means its a list of direct courses of format {id: "course id", grade: "min grade"}
             data.children.forEach(function(childCourse) {
+                // console.log(childCourse);
 
-                if(childCourse.id.includes("X")) {
-                    // assuming that it direclty means its one of the wacky transfer thingies
-                    tchildren.push({
-                        value: childCourse.id,
-                        children: []
-                    });
-                } else {
-                    // normal course
-                    if(childCourse.id in courses) {
+                if(childCourse.hasOwnProperty("id")) {
+                    // means that it's a dictionary object thingy
+                    
+                    if(childCourse.id.includes("X")) {
+                        // assuming that it direclty means its one of the wacky transfer thingies
                         tchildren.push({
                             value: childCourse.id,
-                            children: courses[childCourse.id][2]
-                        });
-                    } else {
-                        tchildren.push({
-                            value: childCourse.id + " (UNAVAILABLE PREREQS)",
                             children: []
                         });
+                    } else {
+                        // normal course
+                        if(childCourse.id in courses) {
+                            tchildren.push({
+                                value: childCourse.id,
+                                children: courses[childCourse.id][2]
+                            });
+                        } else {
+                            tchildren.push({
+                                value: childCourse.id + " (UNAVAILABLE PREREQS)",
+                                children: []
+                            });
+                        }
                     }
+
+                } else {
+
+                    // means it's a list of MOAR items yay
+                    tchildren.push({
+                        value: ref[childCourse[0]], 
+                        children: childCourse.slice(1)
+                    })
+
                 }
+
 
             });
             // cell.nodechildren.push(new node(course.id, []));
