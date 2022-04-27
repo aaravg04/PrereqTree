@@ -12,6 +12,11 @@ const ref  = {
                 "or": "all of: "
             };
 
+var chart = anychart.wordtree([{}], "as-tree");
+
+var mode = true;
+
+
 // useless
 function checkTArea() {
     if(document.getElementById("course").value != '') {
@@ -19,6 +24,37 @@ function checkTArea() {
     } else {
         document.getElementById("bkgdtxt").style = "";
     }
+}
+
+function visualToggle() {
+    // toggle from light to dark mode or vice versa
+
+    if(mode) {
+        chart.background().fill("#000000");
+        document.body.style.backgroundColor = "black";
+        document.getElementById("modeswitcher").innerHTML = "Toggle Light Mode"
+        document.getElementById("info").style.color = "#7c868e";
+        document.getElementById("course").style.backgroundColor = "black";
+        document.getElementById("course").style.color = "#7c868e";
+        document.getElementById("submit").style.backgroundColor = "black";
+        document.getElementById("submit").style.color = "#7c868e";
+
+        mode = false;
+    } else {
+
+        chart.background().fill("#ffffff");
+        document.body.style.backgroundColor = "white";
+        document.getElementById("modeswitcher").innerHTML = "Toggle Dark Mode"
+        document.getElementById("info").style.color = "black";
+        document.getElementById("course").style.backgroundColor = "white";
+        document.getElementById("course").style.color = "black";
+        document.getElementById("submit").style.backgroundColor = "";
+        document.getElementById("submit").style.color = "black";
+
+        mode = true;
+    }
+    chart.draw();
+
 }
 
 function buildTree() {
@@ -58,7 +94,13 @@ function buildTree() {
     // console.log(data, finDat);
 
     // create a chart and set the data
-    var chart = anychart.wordtree(finDat, "as-tree");
+    chart = anychart.wordtree(finDat, "as-tree");
+    // aligning visuals
+    if(mode) {
+        chart.background().fill("#ffffff");
+    } else {
+        chart.background().fill("#000000");
+    }
 
     // set the container id
     chart.container("visCont");

@@ -40,7 +40,10 @@
 </head>
 
 <body>
-    <p>Enter course code (e.g. CS 1331, MATH 1553, etc.) here and click the submit button to see full prerequisite tree <br>
+    <button onclick="visualToggle();" id="modeswitcher">Toggle Dark Mode</button>
+
+    <p id="info">
+        Enter course code (e.g. CS 1331, MATH 1553, etc.) here and click the submit button to see full prerequisite tree <br>
         To isolate a specific "branch" of the tree, click on the item whose tree you wish to isolate <br>
         And to return to the original state, click on the original item (the course at the far left with the code you entered)
     </p>
@@ -49,7 +52,7 @@
     <br>
     <br>
     
-    <button onclick="buildTree();">Submit</button>
+    <button onclick="buildTree();" id="submit">Submit</button>
     <div id="visCont"></div>
 
 </body>
