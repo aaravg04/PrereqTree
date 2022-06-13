@@ -8,29 +8,21 @@ fetch("https://gt-scheduler.github.io/crawler/202208.json")
     .then((obj) => {courses = obj.courses});
 
 const ref  = { 
-                "and": "any of: ",
-                "or": "all of: "
+                "and": "ALL",
+                "or": "ANY"
             };
 
-var chart = anychart.wordtree([{}], "as-tree");
+var idRef = {};
+var nodes = new vis.DataSet([]);
+var edges = new vis.DataSet([]);
 
 var mode = true;
-
-
-// useless
-function checkTArea() {
-    if(document.getElementById("course").value != '') {
-        document.getElementById("bkgdtxt").style.visibility = "hidden";
-    } else {
-        document.getElementById("bkgdtxt").style = "";
-    }
-}
 
 function visualToggle() {
     // toggle from light to dark mode or other way around
 
     if(mode) {
-        chart.background().fill("#000000");
+        // chart.background().fill("#000000");
         document.body.style.backgroundColor = "black";
         document.getElementById("modeswitcher").innerHTML = "Toggle Light Mode"
         document.getElementById("info").style.color = "#7c868e";
@@ -42,7 +34,7 @@ function visualToggle() {
         mode = false;
     } else {
 
-        chart.background().fill("#ffffff");
+        // chart.background().fill("#ffffff");
         document.body.style.backgroundColor = "white";
         document.getElementById("modeswitcher").innerHTML = "Toggle Dark Mode"
         document.getElementById("info").style.color = "black";
@@ -53,8 +45,7 @@ function visualToggle() {
 
         mode = true;
     }
-    chart.draw();
-
+    // chart.draw();
 }
 
 function buildTree() {
@@ -72,12 +63,10 @@ function buildTree() {
         return;
     }
 
-    // var root = new node(course, courses[course][2]);
-    // console.log(root);
-    // root = recursiveTree(root);
-    // recursiveTree(root);
-    // console.log(root);
-
+    // resetting vars
+    nodes = new vis.DataSet([]);
+    edges = new vis.DataSet([]);
+    idRef = {};
 
     // NOTE: FIGURE OUT HOW TO ADD DESCRIPTIONS SO HOVERING OVER ITEM GIVES STUFF LIKE COURSE DESCR, CREDIT HOURS, ETC.
     // OR IS IT REALLY NECESSARY? IDK
@@ -88,43 +77,40 @@ function buildTree() {
 
     // console.log(data);
     buildData(data);
+    idRef[Object.keys(idRef).length] = data.value;
+    nodes.add({id: 0, label: data.value, color: "#FF0000"});
+    traverseData(data.value, 0, data.children);
 
-    var finDat = [data];
+    var options = {
+        autoResize: true, 
+        edges:{
+            smooth:{
+                enabled: true,
+                type: "continuous",
+                roundness: 0.5
+            }, 
+            color:{
+                inherit: true
+            }
+        }
+    };
 
-    // console.log(data, finDat);
+    // create a network
+    var container = document.getElementById('visCont');
 
-    // create a chart and set the data
-    chart = anychart.wordtree(finDat, "as-tree");
-    // aligning visuals
-    if(mode) {
-        chart.background().fill("#ffffff");
-    } else {
-        chart.background().fill("#000000");
-    }
+    var visDat = {
+        nodes: nodes,
+        edges: edges
+    };
+    console.log(visDat);
+    console.log(nodes.get());
+    console.log(edges.get());
+    console.log(idRef);
 
-    // set the container id
-    chart.container("visCont");
-
-    // initiate drawing the chart
-    chart.draw();
+    // initialize your network!
+    var network = new vis.Network(container, visDat, options);
 
 }
-
-/*
-FOUND THE ERROR CASE
-Program doesn't account for the possibility that one of the children is an and list
-
-(from Math 3670 tree)
-children: Array(5)
-0: {id: 'MATH 1502', grade: 'D'}
-1: {id: 'MATH 1512', grade: 'D'}
-2: {id: 'MATH 1504', grade: 'D'}
-3: {id: 'MATH 1555', grade: 'D'}
-4: (3) ['and', Array(4), Array(7)]
-
-Breaks on output 4 because doesn't realize that it's an "and" tree and treats it like a normal class dict
-
-*/
 
 function buildData(data) {
 
@@ -138,6 +124,7 @@ function buildData(data) {
                 value: ref[data.children[0]],
                 children: data.children.slice(1)
             });
+
         } else {
             // means its a list of direct courses of format {id: "course id", grade: "min grade"}
             data.children.forEach(function(childCourse) {
@@ -189,6 +176,24 @@ function buildData(data) {
 
 }
 
+function traverseData(parent, parentID, children) {
+
+    if(children.length > 0) {
+        children.forEach(function(child) {
+
+            // if child not in idRef yet
+            idRef[Object.keys(idRef).length] = child.value;
+            var childID = Object.keys(idRef).length - 1;
+            nodes.add({id: childID, label: child.value});
+
+            edges.add({from: parentID, to: childID, arrows: "to"});
+
+            traverseData(child.value, childID, child.children);
+            
+        });
+    }
+}
+
 /*
     Need tree of nodes, root node is the course selection
     each child is direct prerequisites, how designate which are interchangable?
@@ -204,93 +209,3 @@ function buildData(data) {
               / | \      / | \          
 */
 
-// redundant 
-function recursiveTree(cell) {
-
-    // DON'T CHECK COURSES WITH "X" IN IT FOR CHILDREN (MATH 1X55, ETC.)
-    // console.log(cell.children, cell.children[0]);
-    console.log(cell);
-    if (cell.children.length > 0) {
-
-        if(cell.children[0] == 'and' || cell.children[0] == 'or') {
-            // console.log(cell.children);
-            cell.nodechildren.push(new node(cell.children[0], cell.children.slice(1)));
-        } else {
-            // means its a list of direct courses of format {id: "course id", grade: "min grade"}
-            cell.children.forEach(function(childCourse) {
-
-                if(childCourse.id.includes("X")) {
-                    // assuming that it direclty means its one of the wacky transfer thingies
-                    cell.nodechildren.push(new node(childCourse.id, []));
-                } else {
-                    // normal course
-                    if(childCourse.id in courses) {
-                        cell.nodechildren.push(new node(childCourse.id, courses[childCourse.id][2]));
-                    } else {
-                        cell.nodechildren.push(new node(childCourse.id + " (UNAVAILABLE PREREQS)", []));
-                    }
-                }
-
-            });
-            // cell.nodechildren.push(new node(course.id, []));
-        }
-        console.log(cell, cell.nodechildren)
-        cell.nodechildren.forEach(childCell => recursiveTree(childCell))
-    }
-
-}
-
-
-
-class node {
-
-    constructor(name, children) {
-
-        this.name = name; // course name
-        this.children = children; // children course names, can also be the dict thingys like "and" : [course, course, course]
-        this.nodechildren = []; // actual node items for children
-
-    }
-
-}
-
-/*
-sample visualization code from AnyChart https://docs.anychart.com/Basic_Charts/Word_Tree 
-once the full data tree is created, can transfer to this structure and visualize
-probably more efficient way to do it but eh its fiiiiiiiiiine
-
----
-// create data
-var data = [
-  {value:     "Slavic Languages",
-   children: [
-    {value:   "East", children: [
-      {value: "Russian"},
-      {value: "Ukrainian"},
-      {value: "Belarusian"}
-    ]},
-    {value:   "West", children: [
-      {value: "Polish"},
-      {value: "Czech"},
-      {value: "Slovak"}
-    ]},
-    {value:   "South", children: [
-      {value: "Bulgarian"},
-      {value: "Serbian"},
-      {value: "Croatian"},
-      {value: "Slovene"},
-      {value: "Macedonian"}
-    ]}  
-  ]} 
-];
-
-// create a chart and set the data
-var chart = anychart.wordtree(data, "as-tree");
-
-// set the container id
-chart.container("visCont");
-
-// initiate drawing the chart
-chart.draw();
----
-*/
