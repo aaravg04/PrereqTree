@@ -149,7 +149,7 @@ function buildData(data) {
                             });
                         } else {
                             tchildren.push({
-                                value: childCourse.id + " (UNAVAILABLE PREREQS)",
+                                value: childCourse.id + " (NPRQ)",
                                 children: []
                             });
                         }
@@ -181,10 +181,17 @@ function traverseData(parent, parentID, children) {
     if(children.length > 0) {
         children.forEach(function(child) {
 
+            // IF IT'S NOT AN ALL/ANY, MAKE IT POINT TO THE PRE-EXISTING NODE?
+
             // if child not in idRef yet
-            idRef[Object.keys(idRef).length] = child.value;
-            var childID = Object.keys(idRef).length - 1;
-            nodes.add({id: childID, label: child.value});
+            var childID;
+            if(child.value != "ANY" && child.value != "ALL" && Object.values(idRef).includes(child.value)) {
+                childID = Object.keys(idRef).find(key => idRef[key] === child.value);
+            } else {
+                idRef[Object.keys(idRef).length] = child.value;
+                var childID = Object.keys(idRef).length - 1;
+                nodes.add({id: childID, label: child.value});
+            }
 
             edges.add({from: parentID, to: childID, arrows: "to"});
 
