@@ -50,6 +50,10 @@ function visualToggle() {
 
 function buildTree() {
 
+    // increase spacing btwn nodes
+    // if any/all has just one child, eliminate the any/all and directly connect/point
+    // also if you alr have prereq credit, enter it and see how much of the path is green/already complete
+
     document.getElementById("visCont").innerHTML = "";
 
     var course = document.getElementById("course").value;
@@ -87,7 +91,7 @@ function buildTree() {
             smooth:{
                 enabled: true,
                 type: "continuous",
-                roundness: 0.5
+                roundness: 0.75
             }, 
             color:{
                 inherit: true
@@ -185,6 +189,9 @@ function traverseData(parent, parentID, children) {
 
             // if child not in idRef yet
             var childID;
+            if(child.value == "ANY" && child.children.length == 1) {
+                child = child.children[0];
+            }
             if(child.value != "ANY" && child.value != "ALL" && Object.values(idRef).includes(child.value)) {
                 childID = Object.keys(idRef).find(key => idRef[key] === child.value);
             } else {
