@@ -16,6 +16,13 @@ var idRef = {};
 var nodes = new vis.DataSet([]);
 var edges = new vis.DataSet([]);
 
+// going to add a feature that lets users put a list of courses that they have alr completed
+// make it so that for ANY, it's green if any of children are completed and ALL, its green if all children completed
+// TODO: ADD LISTING THING IN HTML TO ADD LIST OF TAKEN COURSES
+// ALSO THEN MAKE THE ANY/ALL CHECK IF CHILDREN COMPLETED AND MARK THEMSELVES AS COMPLETED TOO
+// COULD USE CHILD FIRST SEARCH? (RECURSIVELY CHECK CHILDREN/REMARK SO IT WORKS ITS WAY UP THE NETWORK, CHECK CHILDREN, MARK THOSE, THEN PARENTS CHECK AGAINST CHILDREN, THEN GRANDPARENTS AGAINST PARENTS, ...)
+var coursesTaken = [];
+
 var mode = true;
 
 function visualToggle() {
@@ -90,7 +97,7 @@ function buildTree() {
                 title: courses[course][0]
             }
         );
-    traverseData(data.value, 0, data.children);
+    traverseData(data.value, 0, data.children, "");
 
     var options = {
         autoResize: true, 
@@ -204,7 +211,7 @@ function buildData(data) {
 
 }
 
-function traverseData(parent, parentID, children) {
+function traverseData(parent, parentID, children, color) {
 
     if(children.length > 0) {
         children.forEach(function(child) {
@@ -213,6 +220,19 @@ function traverseData(parent, parentID, children) {
 
             // if child not in idRef yet
             var childID;
+            var childColor = "";
+            if(color == "") {
+                var childName = child.value;
+                if(childName.includes("(NPRQ)")) {
+                    childName = childName.slice(0, -7);
+                }
+                console.log(child, childName, color);
+                if(coursesTaken.includes(childName)) {
+                    childColor = "#00FF00";
+                }
+            } else {
+                childColor = color;
+            }
             if(child.value == "ANY" && child.children.length == 1) {
                 child = child.children[0];
             }
@@ -226,6 +246,11 @@ function traverseData(parent, parentID, children) {
                     id: childID, 
                     label: child.value
                 }
+
+                if(childColor != "") {
+                    childDeets["color"] = childColor; // opening up possibility for different colorcoding in future
+                }
+
                 if(child.value != "ANY" && child.value != "ALL") {
                     // console.log(child, child.value)
                     if(child.value.includes("(NPRQ)")) {
@@ -241,7 +266,7 @@ function traverseData(parent, parentID, children) {
 
             edges.add({from: parentID, to: childID, arrows: "to"});
 
-            traverseData(child.value, childID, child.children);
+            traverseData(child.value, childID, child.children, childColor);
             
         });
     }
