@@ -82,7 +82,14 @@ function buildTree() {
     // console.log(data);
     buildData(data);
     idRef[Object.keys(idRef).length] = data.value;
-    nodes.add({id: 0, label: data.value, color: "#FF0000"});
+    nodes.add(
+            {
+                id: 0, 
+                label: data.value, 
+                color: "#FF0000", 
+                title: courses[course][0]
+            }
+        );
     traverseData(data.value, 0, data.children);
 
     var options = {
@@ -96,6 +103,11 @@ function buildTree() {
             color:{
                 inherit: true
             }
+        }, 
+        interaction: {
+            hover: true,
+            tooltipDelay: 0, 
+            navigationButtons: true
         }
     };
 
@@ -113,6 +125,18 @@ function buildTree() {
 
     // initialize your network!
     var network = new vis.Network(container, visDat, options);
+
+    // make course title on node click instead of on hover? hover could be annoying if just moving mouse around
+    // can adapt from https://stackoverflow.com/questions/48150985/vis-js-network-fixed-position-for-tooltip-popup 
+    // network.on('click', function(properties) {
+    //     var ids = properties.nodes;
+    //     var clickedNode = nodes.get(ids);
+    //     // console.log(clickedNode);
+    //     if(clickedNode.length != 0) {
+    //         var cNode = clickedNode[0];
+
+    //     }
+    // });
 
 }
 
@@ -197,7 +221,22 @@ function traverseData(parent, parentID, children) {
             } else {
                 idRef[Object.keys(idRef).length] = child.value;
                 var childID = Object.keys(idRef).length - 1;
-                nodes.add({id: childID, label: child.value});
+                // deets about da child
+                var childDeets = {
+                    id: childID, 
+                    label: child.value
+                }
+                if(child.value != "ANY" && child.value != "ALL") {
+                    // console.log(child, child.value)
+                    if(child.value.includes("(NPRQ)")) {
+                        childDeets["title"] = "No Course Name Found";
+                    } else if(child.value.includes("X")) {
+                        childDeets["title"] = "Transfer Credit";
+                    } else {
+                        childDeets["title"] = courses[child.value][0];
+                    }
+                }
+                nodes.add(childDeets);
             }
 
             edges.add({from: parentID, to: childID, arrows: "to"});
