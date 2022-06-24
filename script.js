@@ -76,6 +76,7 @@ function addtClass() {
 
             var elem = document.createElement("label");
             elem.appendChild(document.createTextNode(cTaken));
+            elem.id = "label" + nCT;
             ctnr.appendChild(elem);
 
             var padding = document.createElement("label");
@@ -89,8 +90,9 @@ function addtClass() {
                 // delete course div container
                 console.log(this.id)
                 var div = document.getElementById("div" + this.id);
+                coursesTaken.splice(coursesTaken.indexOf(document.getElementById("label" + this.id).innerText), 1);
                 div.remove();
-                coursesTaken.splice(this.id, 1);
+                // coursesTaken.splice(this.id, 1);
             }
             ctnr.appendChild(rmv);
             
