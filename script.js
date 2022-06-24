@@ -22,6 +22,7 @@ var edges = new vis.DataSet([]);
 // ALSO THEN MAKE THE ANY/ALL CHECK IF CHILDREN COMPLETED AND MARK THEMSELVES AS COMPLETED TOO
 // COULD USE CHILD FIRST SEARCH? (RECURSIVELY CHECK CHILDREN/REMARK SO IT WORKS ITS WAY UP THE NETWORK, CHECK CHILDREN, MARK THOSE, THEN PARENTS CHECK AGAINST CHILDREN, THEN GRANDPARENTS AGAINST PARENTS, ...)
 var coursesTaken = [];
+var nCT = 0;
 
 var mode = true;
 
@@ -55,6 +56,51 @@ function visualToggle() {
     // chart.draw();
 }
 
+// TODO: ALLOW TO REMOVE CLASSES ADDED
+function addtClass() {
+    var cTaken = document.getElementById("tID").value;
+    // console.log(cTaken);
+
+    if (!(Object.keys(courses).includes(cTaken))) {
+        alert("Error! Course not found in Fall 2022 Course list. It's possible that this class is limited to a specific semester or was processed incorrectly. Please check if you typed it correctly and if there are any trailing/leading spaces");
+        return;
+    } else {
+        // means that the class is in the courses thingy
+        if(!(coursesTaken.includes(cTaken))) {
+            // ensuring no duplicates
+            coursesTaken.push(cTaken);
+            var fset = document.getElementById("tcList");
+
+            var ctnr = document.createElement("div");
+            ctnr.id = "div" + nCT;
+
+            var elem = document.createElement("label");
+            elem.appendChild(document.createTextNode(cTaken));
+            ctnr.appendChild(elem);
+
+            var padding = document.createElement("label");
+            padding.appendChild(document.createTextNode("  "));
+            ctnr.appendChild(padding);
+
+            var rmv = document.createElement("button");
+            rmv.textContent = "Remove Course";
+            rmv.id = nCT;
+            rmv.onclick = function() {
+                // delete course div container
+                console.log(this.id)
+                var div = document.getElementById("div" + this.id);
+                div.remove();
+                coursesTaken.splice(this.id, 1);
+            }
+            ctnr.appendChild(rmv);
+            
+            fset.appendChild(ctnr);
+            nCT++;
+            // fset.appendChild(document.createElement("br"));
+        }
+    }
+}
+
 function buildTree() {
 
     // increase spacing btwn nodes
@@ -69,7 +115,7 @@ function buildTree() {
     
     // TODO: need to figure out how to strip tailing spaces so that both "CS 1331" and "CS 1331 " pass
 
-    if (!(course in courses)) {
+    if (!(Object.keys(courses).includes(course))) {
         alert("Error! Course not found in Fall 2022 Course list. Try checking if you typed it correctly and if there are any trailing/leading spaces");
         return;
     }
