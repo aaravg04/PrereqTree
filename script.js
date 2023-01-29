@@ -8,29 +8,29 @@ fetch("https://gt-scheduler.github.io/crawler/202208.json")
     .then((obj) => {courses = obj.courses});
 
 const ref  = { 
-                "and": "any of: ",
-                "or": "all of: "
+                "and": "ALL",
+                "or": "ANY"
             };
 
-var chart = anychart.wordtree([{}], "as-tree");
+var idRef = {};
+var nodes = new vis.DataSet([]);
+var edges = new vis.DataSet([]);
+
+// going to add a feature that lets users put a list of courses that they have alr completed
+// make it so that for ANY, it's green if any of children are completed and ALL, its green if all children completed
+// TODO: ADD LISTING THING IN HTML TO ADD LIST OF TAKEN COURSES
+// ALSO THEN MAKE THE ANY/ALL CHECK IF CHILDREN COMPLETED AND MARK THEMSELVES AS COMPLETED TOO
+// COULD USE CHILD FIRST SEARCH? (RECURSIVELY CHECK CHILDREN/REMARK SO IT WORKS ITS WAY UP THE NETWORK, CHECK CHILDREN, MARK THOSE, THEN PARENTS CHECK AGAINST CHILDREN, THEN GRANDPARENTS AGAINST PARENTS, ...)
+var coursesTaken = [];
+var nCT = 0;
 
 var mode = true;
-
-
-// useless
-function checkTArea() {
-    if(document.getElementById("course").value != '') {
-        document.getElementById("bkgdtxt").style.visibility = "hidden";
-    } else {
-        document.getElementById("bkgdtxt").style = "";
-    }
-}
 
 function visualToggle() {
     // toggle from light to dark mode or other way around
 
     if(mode) {
-        chart.background().fill("#000000");
+        // chart.background().fill("#000000");
         document.body.style.backgroundColor = "black";
         document.getElementById("modeswitcher").innerHTML = "Toggle Light Mode"
         document.getElementById("info").style.color = "#7c868e";
@@ -42,7 +42,7 @@ function visualToggle() {
         mode = false;
     } else {
 
-        chart.background().fill("#ffffff");
+        // chart.background().fill("#ffffff");
         document.body.style.backgroundColor = "white";
         document.getElementById("modeswitcher").innerHTML = "Toggle Dark Mode"
         document.getElementById("info").style.color = "black";
@@ -53,11 +53,61 @@ function visualToggle() {
 
         mode = true;
     }
-    chart.draw();
+    // chart.draw();
+}
 
+// TODO: ALLOW TO REMOVE CLASSES ADDED
+function addtClass() {
+    var cTaken = document.getElementById("tID").value;
+    // console.log(cTaken);
+
+    if (!(Object.keys(courses).includes(cTaken))) {
+        alert("Error! Course not found in Fall 2022 Course list. It's possible that this class is limited to a specific semester or was processed incorrectly. Please check if you typed it correctly and if there are any trailing/leading spaces");
+        return;
+    } else {
+        // means that the class is in the courses thingy
+        if(!(coursesTaken.includes(cTaken))) {
+            // ensuring no duplicates
+            coursesTaken.push(cTaken);
+            var fset = document.getElementById("tcList");
+
+            var ctnr = document.createElement("div");
+            ctnr.id = "div" + nCT;
+
+            var elem = document.createElement("label");
+            elem.appendChild(document.createTextNode(cTaken));
+            elem.id = "label" + nCT;
+            ctnr.appendChild(elem);
+
+            var padding = document.createElement("label");
+            padding.appendChild(document.createTextNode("  "));
+            ctnr.appendChild(padding);
+
+            var rmv = document.createElement("button");
+            rmv.textContent = "Remove Course";
+            rmv.id = nCT;
+            rmv.onclick = function() {
+                // delete course div container
+                console.log(this.id)
+                var div = document.getElementById("div" + this.id);
+                coursesTaken.splice(coursesTaken.indexOf(document.getElementById("label" + this.id).innerText), 1);
+                div.remove();
+                // coursesTaken.splice(this.id, 1);
+            }
+            ctnr.appendChild(rmv);
+            
+            fset.appendChild(ctnr);
+            nCT++;
+            // fset.appendChild(document.createElement("br"));
+        }
+    }
 }
 
 function buildTree() {
+
+    // increase spacing btwn nodes
+    // if any/all has just one child, eliminate the any/all and directly connect/point
+    // also if you alr have prereq credit, enter it and see how much of the path is green/already complete
 
     document.getElementById("visCont").innerHTML = "";
 
@@ -67,17 +117,15 @@ function buildTree() {
     
     // TODO: need to figure out how to strip tailing spaces so that both "CS 1331" and "CS 1331 " pass
 
-    if (!(course in courses)) {
+    if (!(Object.keys(courses).includes(course))) {
         alert("Error! Course not found in Fall 2022 Course list. Try checking if you typed it correctly and if there are any trailing/leading spaces");
         return;
     }
 
-    // var root = new node(course, courses[course][2]);
-    // console.log(root);
-    // root = recursiveTree(root);
-    // recursiveTree(root);
-    // console.log(root);
-
+    // resetting vars
+    nodes = new vis.DataSet([]);
+    edges = new vis.DataSet([]);
+    idRef = {};
 
     // NOTE: FIGURE OUT HOW TO ADD DESCRIPTIONS SO HOVERING OVER ITEM GIVES STUFF LIKE COURSE DESCR, CREDIT HOURS, ETC.
     // OR IS IT REALLY NECESSARY? IDK
@@ -88,43 +136,65 @@ function buildTree() {
 
     // console.log(data);
     buildData(data);
+    idRef[Object.keys(idRef).length] = data.value;
+    nodes.add(
+            {
+                id: 0, 
+                label: data.value, 
+                color: "#FF0000", 
+                title: courses[course][0]
+            }
+        );
+    traverseData(data.value, 0, data.children, "");
+    // checkPrereqs(data.value, 0, data.children, "");
 
-    var finDat = [data];
+    var options = {
+        autoResize: true, 
+        edges:{
+            smooth:{
+                enabled: true,
+                type: "continuous",
+                roundness: 0.75
+            }, 
+            color:{
+                inherit: true
+            }
+        }, 
+        interaction: {
+            hover: true,
+            tooltipDelay: 0, 
+            navigationButtons: true
+        }
+    };
 
-    // console.log(data, finDat);
+    // create a network
+    var container = document.getElementById('visCont');
 
-    // create a chart and set the data
-    chart = anychart.wordtree(finDat, "as-tree");
-    // aligning visuals
-    if(mode) {
-        chart.background().fill("#ffffff");
-    } else {
-        chart.background().fill("#000000");
-    }
+    var visDat = {
+        nodes: nodes,
+        edges: edges
+    };
+    console.log(visDat);
+    console.log(nodes.get());
+    console.log(edges.get());
+    console.log(idRef);
 
-    // set the container id
-    chart.container("visCont");
+    // initialize your network!
+    var network = new vis.Network(container, visDat, options);
 
-    // initiate drawing the chart
-    chart.draw();
+    // make course title on node click instead of on hover? hover could be annoying if just moving mouse around
+    // can adapt from https://stackoverflow.com/questions/48150985/vis-js-network-fixed-position-for-tooltip-popup 
+    // network.on('click', function(properties) {
+    //     var ids = properties.nodes;
+    //     var clickedNode = nodes.get(ids);
+    //     // console.log(clickedNode);
+    //     if(clickedNode.length != 0) {
+    //         var cNode = clickedNode[0];
+
+    //     }
+    // });
 
 }
-
-/*
-FOUND THE ERROR CASE
-Program doesn't account for the possibility that one of the children is an and list
-
-(from Math 3670 tree)
-children: Array(5)
-0: {id: 'MATH 1502', grade: 'D'}
-1: {id: 'MATH 1512', grade: 'D'}
-2: {id: 'MATH 1504', grade: 'D'}
-3: {id: 'MATH 1555', grade: 'D'}
-4: (3) ['and', Array(4), Array(7)]
-
-Breaks on output 4 because doesn't realize that it's an "and" tree and treats it like a normal class dict
-
-*/
 
 function buildData(data) {
 
@@ -138,6 +208,7 @@ function buildData(data) {
                 value: ref[data.children[0]],
                 children: data.children.slice(1)
             });
+
         } else {
             // means its a list of direct courses of format {id: "course id", grade: "min grade"}
             data.children.forEach(function(childCourse) {
@@ -162,7 +233,7 @@ function buildData(data) {
                             });
                         } else {
                             tchildren.push({
-                                value: childCourse.id + " (UNAVAILABLE PREREQS)",
+                                value: childCourse.id + " (NPRQ)",
                                 children: []
                             });
                         }
@@ -189,6 +260,103 @@ function buildData(data) {
 
 }
 
+function traverseData(parent, parentID, children, color) {
+
+    if(children.length > 0) {
+        var nCompleted = 0;
+        var isAny = (parent.value == "ANY");
+        var isAll = (parent.value == "ALL");
+        var cList = [];
+
+        var completedColor = "#00FF00";
+
+        children.forEach(function(child) {
+
+            // IF IT'S NOT AN ALL/ANY, MAKE IT POINT TO THE PRE-EXISTING NODE?
+
+            // if child not in idRef yet
+            var childID;
+            var childColor = "";
+            var childDeets = {};
+
+            if(["", "#FF0000", "#0000FF"].includes(color)) {
+                var childName = child.value;
+                if(childName.includes("(NPRQ)")) {
+                    childName = childName.slice(0, -7);
+                }
+                console.log(child, childName, color);
+                if(coursesTaken.includes(childName)) {
+                    childColor = completedColor;
+                    nCompleted++;
+                }
+            } else {
+                childColor = color;
+            }
+            if(child.value == "ANY" && child.children.length == 1) {
+                child = child.children[0];
+            }
+            if(child.value != "ANY" && child.value != "ALL" && Object.values(idRef).includes(child.value)) {
+                childID = Object.keys(idRef).find(key => idRef[key] === child.value);
+            } else {
+                idRef[Object.keys(idRef).length] = child.value;
+                var childID = Object.keys(idRef).length - 1;
+                // deets about da child
+                childDeets = {
+                    id: childID, 
+                    label: child.value
+                }
+
+                if(childColor != "") {
+                    childDeets["color"] = childColor; // opening up possibility for different colorcoding in future
+                }
+
+                if(child.value != "ANY" && child.value != "ALL") {
+                    // console.log(child, child.value)
+                    if(child.value.includes("(NPRQ)")) {
+                        childDeets["title"] = "No Course Name Found";
+                    } else if(child.value.includes("X")) {
+                        childDeets["title"] = "Transfer Credit";
+                    } else {
+                        childDeets["title"] = courses[child.value][0];
+                    }
+                }
+                nodes.add(childDeets);
+            }
+
+            // edges.add({from: parentID, to: childID, arrows: "to"});
+
+            cList.push([child.value, childID, child.children, childColor, childDeets])
+
+            // traverseData(child.value, childID, child.children, childColor);
+        });
+
+        var satisfiesAny = nCompleted > 0;
+        var satisfiesAll = nCompleted == children.length;
+
+        cList.forEach(function(items) {
+
+            console.log(items, ((isAny && satisfiesAny) || (isAll && satisfiesAll) || (coursesTaken.includes(parent.value))) ? completedColor : items[3]);
+
+            // if(items[4] != {}) {
+            //     items[4]["color"] = ((isAny && satisfiesAny) || (isAll && satisfiesAll) || (coursesTaken.includes(parent.value))) ? completedColor : items[3];
+            //     nodes.add(items[4]);
+            // }
+            edges.add({from: parentID, to: items[1], arrows: "to"});
+            traverseData(items[0], items[1], items[2], ((isAny && satisfiesAny) || (isAll && satisfiesAll) || (coursesTaken.includes(parent.value))) ? completedColor : items[3])
+            
+            // add followup that checks color of child nodes and updates parent nodes based on that?
+
+        });
+
+    }
+}
+
+// function checkPrereqs(parent, parentID, children, color) {
+//     if(children.length > 0) {
+
+//     }
+// }
+
 /*
     Need tree of nodes, root node is the course selection
     each child is direct prerequisites, how designate which are interchangable?
@@ -204,93 +372,3 @@ function buildData(data) {
               / | \      / | \          
 */
 
-// redundant 
-function recursiveTree(cell) {
-
-    // DON'T CHECK COURSES WITH "X" IN IT FOR CHILDREN (MATH 1X55, ETC.)
-    // console.log(cell.children, cell.children[0]);
-    console.log(cell);
-    if (cell.children.length > 0) {
-
-        if(cell.children[0] == 'and' || cell.children[0] == 'or') {
-            // console.log(cell.children);
-            cell.nodechildren.push(new node(cell.children[0], cell.children.slice(1)));
-        } else {
-            // means its a list of direct courses of format {id: "course id", grade: "min grade"}
-            cell.children.forEach(function(childCourse) {
-
-                if(childCourse.id.includes("X")) {
-                    // assuming that it direclty means its one of the wacky transfer thingies
-                    cell.nodechildren.push(new node(childCourse.id, []));
-                } else {
-                    // normal course
-                    if(childCourse.id in courses) {
-                        cell.nodechildren.push(new node(childCourse.id, courses[childCourse.id][2]));
-                    } else {
-                        cell.nodechildren.push(new node(childCourse.id + " (UNAVAILABLE PREREQS)", []));
-                    }
-                }
-
-            });
-            // cell.nodechildren.push(new node(course.id, []));
-        }
-        console.log(cell, cell.nodechildren)
-        cell.nodechildren.forEach(childCell => recursiveTree(childCell))
-    }
-
-}
-
-
-
-class node {
-
-    constructor(name, children) {
-
-        this.name = name; // course name
-        this.children = children; // children course names, can also be the dict thingys like "and" : [course, course, course]
-        this.nodechildren = []; // actual node items for children
-
-    }
-
-}
-
-/*
-sample visualization code from AnyChart https://docs.anychart.com/Basic_Charts/Word_Tree 
-once the full data tree is created, can transfer to this structure and visualize
-probably more efficient way to do it but eh its fiiiiiiiiiine
-
----
-// create data
-var data = [
-  {value:     "Slavic Languages",
-   children: [
-    {value:   "East", children: [
-      {value: "Russian"},
-      {value: "Ukrainian"},
-      {value: "Belarusian"}
-    ]},
-    {value:   "West", children: [
-      {value: "Polish"},
-      {value: "Czech"},
-      {value: "Slovak"}
-    ]},
-    {value:   "South", children: [
-      {value: "Bulgarian"},
-      {value: "Serbian"},
-      {value: "Croatian"},
-      {value: "Slovene"},
-      {value: "Macedonian"}
-    ]}  
-  ]} 
-];
-
-// create a chart and set the data
-var chart = anychart.wordtree(data, "as-tree");
-
-// set the container id
-chart.container("visCont");
-
-// initiate drawing the chart
-chart.draw();
----
-*/

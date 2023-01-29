@@ -1,59 +1,45 @@
 <!DOCTYPE html>
 <head>
-    <script src="https://cdn.anychart.com/releases/8.11.0/js/anychart-core.min.js"></script>
-    <script src="https://cdn.anychart.com/releases/8.11.0/js/anychart-bundle.min.js"></script>
-    <style type='text/css'>
-        /* thx https://stackoverflow.com/questions/16550717/how-to-add-a-background-text-to-textarea-tags */
-        .wallpapered {
-          width: 300px;
-          height: 75px;
-          position: relative;
-          /* outline: 1px dashed blue; */
-        }
-        
-        .wallpapered textarea {
-          width: inherit;
-          height: inherit;
-        }
-        
-        .wallpapered .background {
-          position: absolute;
-          top: 0;
-          left: 0;
-          color: gray;
-          font-family: 'Gill Sans', 'Gill Sans MT', 'Calibri', 'Trebuchet MS', sans-serif;
-          font-size: medium;
-          /* user-select: none; */
-        }
-
-        textarea {
-            font-family: 'Gill Sans', 'Gill Sans MT', 'Calibri', 'Trebuchet MS', sans-serif;
-            font-size: medium;
-        }
-
-        p {
-            font-family: 'Gill Sans', 'Gill Sans MT', 'Calibri', 'Trebuchet MS', sans-serif
-        }
-
-    </style>
-    
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <link rel="stylesheet" href="style.css">
     <script src="script.js"></script>
 </head>
 
 <body>
-    <button onclick="visualToggle();" id="modeswitcher">Toggle Dark Mode</button>
+
+    <!-- need to fix the dark mode color scheme to be not trash and buggy -->
+    <!-- <button onclick="visualToggle();" id="modeswitcher">Toggle Dark Mode</button> -->
 
     <p id="info">
-        Enter course code (e.g. CS 1331, MATH 1553, etc.) here and click the submit button to see full prerequisite tree <br>
-        To isolate a specific "branch" of the tree, click on the item whose tree you wish to isolate <br>
-        And to return to the original state, click on the original item (the course at the far left with the code you entered)
+        To zoom, you can use the scroll wheel on your mouse. To move around the map, hold left click and move the mouse around. <br>
+        To move nodes, left click a node and drag it where you want <br>
+        Note - (NPRQ) at the end of a name means that no prerequisites were found for the course in the selected semester. 
     </p>
 
-    <textarea id="course" rows="1" cols="50"></textarea>
+    <p> Enter course code (e.g. CS 1331, MATH 1553, etc.) here and click the submit button to see full prerequisite tree </p>
+    <input type="text" id="course">
     <br>
-    <br>
-    
+
+    <p>Add the classes you have already completed below (if any)</p> <!-- TODO: ASK FOR GRADES IN CLASSES AND USE TO DETERMINE IF SATISFY PREREQ -->
+    <div id="tClass">
+        <input type="text" id="tID">
+        <br> <br>
+        <button onclick="addtClass();">Add completed class</button>
+
+        <br> <br> 
+
+        <fieldset id="tcList">
+            <legend>Completed Class List</legend>
+
+        </fieldset>
+
+    </div>
+
+    <br><br>
+    <p>When you've written your target class and added all completed classes, click 'Submit' to generate the tree</p>
     <button onclick="buildTree();" id="submit">Submit</button>
+    <br> <br>
+
     <div id="visCont"></div>
 
 </body>
