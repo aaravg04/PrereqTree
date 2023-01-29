@@ -146,6 +146,7 @@ function buildTree() {
             }
         );
     traverseData(data.value, 0, data.children, "");
+    // checkPrereqs(data.value, 0, data.children, "");
 
     var options = {
         autoResize: true, 
@@ -262,6 +263,13 @@ function buildData(data) {
 function traverseData(parent, parentID, children, color) {
 
     if(children.length > 0) {
+        var nCompleted = 0;
+        var isAny = (parent.value == "ANY");
+        var isAll = (parent.value == "ALL");
+        var cList = [];
+
+        var completedColor = "#00FF00";
+
         children.forEach(function(child) {
 
             // IF IT'S NOT AN ALL/ANY, MAKE IT POINT TO THE PRE-EXISTING NODE?
@@ -269,14 +277,17 @@ function traverseData(parent, parentID, children, color) {
             // if child not in idRef yet
             var childID;
             var childColor = "";
-            if(color == "") {
+            var childDeets = {};
+
+            if(["", "#FF0000", "#0000FF"].includes(color)) {
                 var childName = child.value;
                 if(childName.includes("(NPRQ)")) {
                     childName = childName.slice(0, -7);
                 }
                 console.log(child, childName, color);
                 if(coursesTaken.includes(childName)) {
-                    childColor = "#00FF00";
+                    childColor = completedColor;
+                    nCompleted++;
                 }
             } else {
                 childColor = color;
@@ -290,7 +301,7 @@ function traverseData(parent, parentID, children, color) {
                 idRef[Object.keys(idRef).length] = child.value;
                 var childID = Object.keys(idRef).length - 1;
                 // deets about da child
-                var childDeets = {
+                childDeets = {
                     id: childID, 
                     label: child.value
                 }
@@ -312,13 +323,39 @@ function traverseData(parent, parentID, children, color) {
                 nodes.add(childDeets);
             }
 
-            edges.add({from: parentID, to: childID, arrows: "to"});
+            // edges.add({from: parentID, to: childID, arrows: "to"});
 
-            traverseData(child.value, childID, child.children, childColor);
-            
+            cList.push([child.value, childID, child.children, childColor, childDeets])
+
+            // traverseData(child.value, childID, child.children, childColor);
         });
+
+        var satisfiesAny = nCompleted > 0;
+        var satisfiesAll = nCompleted == children.length;
+
+        cList.forEach(function(items) {
+
+            console.log(items, ((isAny && satisfiesAny) || (isAll && satisfiesAll) || (coursesTaken.includes(parent.value))) ? completedColor : items[3]);
+
+            // if(items[4] != {}) {
+            //     items[4]["color"] = ((isAny && satisfiesAny) || (isAll && satisfiesAll) || (coursesTaken.includes(parent.value))) ? completedColor : items[3];
+            //     nodes.add(items[4]);
+            // }
+            edges.add({from: parentID, to: items[1], arrows: "to"});
+            traverseData(items[0], items[1], items[2], ((isAny && satisfiesAny) || (isAll && satisfiesAll) || (coursesTaken.includes(parent.value))) ? completedColor : items[3])
+            
+            // add followup that checks color of child nodes and updates parent nodes based on that?
+
+        });
+
     }
 }
+
+// function checkPrereqs(parent, parentID, children, color) {
+//     if(children.length > 0) {
+
+//     }
+// }
 
 /*
     Need tree of nodes, root node is the course selection
