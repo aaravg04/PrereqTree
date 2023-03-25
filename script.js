@@ -3,7 +3,7 @@
 
 var courses;
 // very helpful - https://www.codegrepper.com/code-examples/javascript/How+to+access+return+value+of+promise
-fetch("https://gt-scheduler.github.io/crawler/202208.json")
+fetch("https://gt-scheduler.github.io/crawler/202308.json")
     .then(response => {return response.json();})
     .then((obj) => {courses = obj.courses});
 
